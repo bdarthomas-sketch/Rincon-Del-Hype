@@ -1,0 +1,46 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ProductoPage from "@/components/producto/ProductoPage";
+import { getProductBySlug } from "@/data/products";
+
+export const prerender = false;
+
+const slug = Astro.params.slug;
+let product = null;
+try {
+  product = await getProductBySlug(slug);
+} catch {}
+
+const title = product
+  ? `${product.name} — ${product.brand} | Rincón del Hype`
+  : "Producto - Rincón del Hype";
+const description = product
+  ? `${product.name} de ${product.brand}. Precio: USD ${product.price}. Sneakers y streetwear en Argentina.`
+  : "Producto - Rincón del Hype";
+const productImage = product?.image || "";
+---
+
+<Layout title={title} description={description}>
+  {
+    product && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": product.name,
+        "brand": { "@type": "Brand", "name": product.brand },
+        "offers": {
+          "@type": "Offer",
+          "price": product.price,
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+        },
+        "image": productImage,
+      })} />
+    )
+  }
+  {
+    product
+      ? <ProductoPage client:load initialProduct={product} />
+      : <div class="container-x pt-40 text-center"><h1 class="font-1 font-bold text-2xl text-white mb-4">Producto no encontrado</h1><a href="/catalogo" class="font-1 uppercase text-xs tracking-widest text-hype">Volver al catálogo</a></div>
+  }
+</Layout>

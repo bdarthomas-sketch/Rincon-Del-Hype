@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN out_of_stock_message TEXT DEFAULT NULL;

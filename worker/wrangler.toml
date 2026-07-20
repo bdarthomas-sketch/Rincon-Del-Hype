@@ -1,0 +1,9 @@
+name = "rincondelhype-api"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+[images]
+binding = "IMAGES"
+
+[vars]
+ALLOWED_ORIGINS = "http://localhost:4321,https://rincondelhype.com,https://www.rincondelhype.com,https://rincon-del-hype-web-remake.pages.dev"

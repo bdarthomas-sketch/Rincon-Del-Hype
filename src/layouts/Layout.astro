@@ -1,0 +1,70 @@
+---
+import UsdModal from "@/components/site/UsdModal";
+import SmoothScroll from "@/components/site/SmoothScroll";
+import PageViewTracker from "@/components/site/PageViewTracker";
+import "../styles/global.css";
+
+export interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+
+const apiBase = import.meta.env.PUBLIC_API_BASE || "https://rincondelhype-api.bdarthomas.workers.dev";
+let settings: Record<string, any> = {};
+try {
+  const res = await fetch(`${apiBase}/api/settings`);
+  if (res.ok) settings = await res.json();
+} catch {}
+const storeInfo: Record<string, any> = settings.store_info || {};
+const canonical = Astro.url.toString();
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://rincondelhype.com/brand/rincon-del-hype.webp" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Rincón del Hype" />
+    <meta property="og:locale" content="es_AR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://rincondelhype.com/brand/rincon-del-hype.webp" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preload" href="/fonts/1.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/2.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/3.woff2" as="font" type="font/woff2" crossorigin />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Rincón del Hype",
+      "url": "https://rincondelhype.com",
+      "description": "Sneakers y streetwear 100% auténticos. Zona Oeste, Buenos Aires.",
+      "sameAs": [
+        "https://instagram.com/rincondelhype",
+        "https://tiktok.com/@rincondelhype",
+        "https://youtube.com/@rincondelhype",
+        "https://twitter.com/rincondelhype"
+      ]
+    })} />
+    <script>
+      window.__RDH_SETTINGS__ = JSON.parse('{JSON.stringify(settings)}');
+    </script>
+  </head>
+  <body class="bg-background text-foreground antialiased">
+    <UsdModal client:load />
+    <SmoothScroll client:load />
+    <PageViewTracker client:load />
+    <slot />
+  </body>
+</html>

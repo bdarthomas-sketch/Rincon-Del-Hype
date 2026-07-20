@@ -1,0 +1,25 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { Catalogo as CatalogoPage } from "@/components/catalogo/CatalogoPage";
+import SiteHeader from "@/components/site/SiteHeader";
+import SiteFooter from "@/components/site/SiteFooter";
+import CartDrawer from "@/components/cart/CartDrawer";
+import { getAllProducts, getCategories, getBrands, getSizes } from "@/data/products";
+
+let products = [], categories = [], brands = [], sizes = [];
+try {
+  products = await getAllProducts();
+  categories = await getCategories();
+  brands = await getBrands();
+  sizes = await getSizes();
+} catch (e) {
+  console.error("Error al cargar datos del catálogo:", e);
+}
+---
+
+<Layout title="Catálogo - Rincón del Hype | Sneakers & Streetwear" description="Catálogo - Rincón del Hype | Sneakers & Streetwear">
+  <SiteHeader client:load />
+  <CatalogoPage client:load products={products} categories={categories} brands={brands} sizes={sizes} searchQuery={Astro.url.searchParams.get('q') ?? ""} />
+  <SiteFooter client:load />
+  <CartDrawer client:load />
+</Layout>

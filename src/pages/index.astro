@@ -1,0 +1,54 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import SiteHeader from "@/components/site/SiteHeader";
+import Hero from "@/components/site/Hero";
+import NewArrivals from "@/components/site/NewArrivals";
+import About from "@/components/site/About";
+import HowToOrder from "@/components/site/HowToOrder";
+import HypeGallery from "@/components/site/HypeGallery";
+import SiteFooter from "@/components/site/SiteFooter";
+import CartDrawer from "@/components/cart/CartDrawer";
+import { getAllProducts } from "@/data/products";
+
+let allProducts = [];
+try {
+  allProducts = await getAllProducts();
+} catch (e) {
+  console.error("Error al cargar productos en index:", e);
+}
+const newProducts = allProducts.filter((p) => p.isNew);
+const featured = "is_featured" in (allProducts[0] || {}) ? allProducts.filter((p: any) => p.is_featured) : allProducts.slice(0, 4);
+---
+
+<Layout title="Rincón del Hype | Sneakers & Streetwear Premium" description="Rincón del Hype | Sneakers & Streetwear Premium">
+  <SiteHeader client:load />
+  <main>
+    <Hero client:load products={featured} />
+    <NewArrivals client:load products={newProducts} />
+    <About client:load />
+    <div class="relative">
+      <div class="pointer-events-none absolute inset-0 z-0">
+        <div class="absolute left-1/4 top-1/4 size-[700px] rounded-full bg-hype/10 blur-[160px]" />
+        <div class="absolute -top-20 right-1/4 size-[400px] rounded-full bg-hype/15 blur-[140px] animate-drift" />
+        <div class="absolute bottom-1/3 left-1/3 size-[500px] rounded-full bg-hype/10 blur-[160px] animate-pulse-glow delay-neg-2" />
+        <div
+          aria-hidden
+          class="bg-grid-subtle absolute inset-0 opacity-50"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundSize: "80px 80px",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)",
+          }}
+        />
+      </div>
+      <HowToOrder client:load />
+      <HypeGallery client:load />
+    </div>
+  </main>
+  <SiteFooter client:load />
+  <CartDrawer client:load />
+</Layout>

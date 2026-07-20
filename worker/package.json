@@ -1,0 +1,21 @@
+{
+  "name": "rincondelhype-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "hono": "^4.7.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250401.0",
+    "typescript": "^6.0.0",
+    "wrangler": "^4.0.0"
+  }
+}
