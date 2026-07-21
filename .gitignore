@@ -2,10 +2,16 @@ node_modules/
 dist/
 .wrangler/
 .astro/
+plans/
 .env
 .env.local
 .dev.vars
 worker/.dev.vars
 *.log
+*.tsbuildinfo
+*.sw[po]
+.vscode/
+.idea/
+worker/.wrangler/
 .DS_Store
 Thumbs.db
