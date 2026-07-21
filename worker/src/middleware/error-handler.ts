@@ -5,11 +5,7 @@ import { AppError } from '../lib/errors';
 export const errorHandler: ErrorHandler = (err, c) => {
   if (err instanceof ZodError) {
     return c.json({
-      error: 'Validation error',
-      details: err.errors.map(e => ({
-        path: e.path.join('.'),
-        message: e.message,
-      })),
+      error: { message: `Validation error: ${err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}` },
     }, 400);
   }
 
