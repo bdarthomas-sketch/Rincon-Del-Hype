@@ -7,15 +7,11 @@ import react from '@astrojs/react';
 
 import tailwindcss from '@tailwindcss/vite';
 
-import cloudflare from '@astrojs/cloudflare';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
-  adapter: cloudflare({
-    prerenderEnvironment: 'node',
-  }),
+  output: 'static',
   integrations: [react()],
 
   vite: {

@@ -1,9 +1,15 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import ProductoPage from "@/components/producto/ProductoPage";
-import { getProductBySlug } from "@/data/products";
+import { getAllProducts, getProductBySlug } from "@/data/products";
 
-export const prerender = false;
+export async function getStaticPaths() {
+  const products = await getAllProducts();
+  return products.filter(p => p.slug).map(p => ({
+    params: { slug: p.slug },
+    props: {},
+  }));
+}
 
 const slug = Astro.params.slug;
 let product = null;
