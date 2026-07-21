@@ -57,9 +57,7 @@ const canonical = Astro.url.toString();
         "https://twitter.com/rincondelhype"
       ]
     })} />
-    <script>
-      window.__RDH_SETTINGS__ = JSON.parse('{JSON.stringify(settings)}');
-    </script>
+    <script set:html={`window.__RDH_SETTINGS__ = ${JSON.stringify(settings)};`}></script>
   </head>
   <body class="bg-background text-foreground antialiased">
     <UsdModal client:load />

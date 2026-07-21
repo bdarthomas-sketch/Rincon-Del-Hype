@@ -1,7 +1,7 @@
 ﻿import type { Product, Category } from "../data/types";
 
 const API_BASE = (typeof import.meta !== 'undefined' ? import.meta.env?.PUBLIC_API_BASE : undefined) || "https://rincondelhype-api.bdarthomas.workers.dev";
-const API_PATH = `${API_PATH}/api`;
+const API_PATH = `${API_BASE}/api`;
 
 interface ApiProductRow {
   id: string;

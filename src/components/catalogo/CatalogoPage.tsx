@@ -74,7 +74,7 @@ function Catalogo({ products, categories, brands, sizes, searchQuery }: Catalogo
 
       return true;
     });
-  }, [effectiveProducts, selectedCategories, selectedBrands, selectedSizes, normalizedQuery]);
+  }, [products, selectedCategories, selectedBrands, selectedSizes, normalizedQuery]);
 
   const sorted = useMemo(() => {
     const list = [...filtered];

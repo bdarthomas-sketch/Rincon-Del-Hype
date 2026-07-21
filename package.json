@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "deploy:front": "npx wrangler pages deploy dist/ --project-name rincon-del-hype-web-remake --branch main --commit-dirty=true"
+    "deploy:front": "npx wrangler pages deploy dist/ --project-name rincon-del-hype --branch main --commit-dirty=true"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.1",

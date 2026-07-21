@@ -6,4 +6,4 @@ compatibility_date = "2025-04-01"
 binding = "IMAGES"
 
 [vars]
-ALLOWED_ORIGINS = "http://localhost:4321,https://rincondelhype.com,https://www.rincondelhype.com,https://rincon-del-hype-web-remake.pages.dev"
+ALLOWED_ORIGINS = "http://localhost:4321,https://rincon-del-hype.pages.dev,https://rincondelhype.com,https://www.rincondelhype.com"
