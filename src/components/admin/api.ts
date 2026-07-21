@@ -511,7 +511,7 @@ export async function trackAnalyticsEvent(data: {
 // Rendimiento / Performance
 export async function getRendimiento(token: string) {
   return request<{ data: { most_viewed: PerformanceItem[] } }>(
-    `${API_PATH}/admin/analytics/performance`,
+    `${API_PATH}/admin/rendimiento`,
     { headers: authHeaders(token) }
   );
 }
