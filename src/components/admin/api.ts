@@ -11,8 +11,8 @@ function authHeaders(token: string): Record<string, string> {
 
 const UNAUTHORIZED_EVENT = "rdh:unauthorized";
 
-function isAuthError(res: Response, json: any): boolean {
-  return res.status === 401 && json?.error?.code === "UNAUTHORIZED";
+function isAuthError(res: Response, _json: any): boolean {
+  return res.status === 401;
 }
 
 async function silentRefresh(): Promise<{ access_token: string; refresh_token: string; expires_in: number } | null> {
