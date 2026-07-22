@@ -2,6 +2,7 @@
 import { RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getImageCompositionStyle } from "@/lib/image-composition";
+import { updateImageComposition } from "./api";
 
 interface ImageCompositionEditorProps {
   imageUrl: string;
@@ -49,18 +50,8 @@ export function ImageCompositionEditor({
         setSaveStatus("saving");
         try {
           const token = localStorage.getItem("rdh_admin_token");
-          const res = await fetch(
-            `https://rincondelhype-api.bdarthomas.workers.dev/api/products/${productId}/images/${imageId}/composition`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(newComposition),
-            }
-          );
-          if (!res.ok) throw new Error("Failed to save");
+          if (!token) throw new Error("No token");
+          await updateImageComposition(token, productId, imageId, newComposition);
           lastSavedRef.current = key;
           setSaveStatus("saved");
           setTimeout(() => setSaveStatus("idle"), 2000);

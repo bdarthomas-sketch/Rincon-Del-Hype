@@ -6,6 +6,7 @@ import { getProductImageUrl } from "@/data/product-images";
 import { getImageCompositionStyle } from "@/lib/image-composition";
 import { trackEvent } from "@/lib/analytics";
 import { useSettingsStore } from "@/lib/store/settings-store";
+import { getAllProducts } from "@/data/products";
 import type { Category, Product } from "@/data/types";
 
 interface CatalogoProps {
@@ -16,11 +17,16 @@ interface CatalogoProps {
   searchQuery: string;
 }
 
-function Catalogo({ products, categories, brands, sizes, searchQuery }: CatalogoProps) {
+function Catalogo({ products: initialProducts, categories, brands, sizes, searchQuery }: CatalogoProps) {
+  const [products, setProducts] = useState(initialProducts);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<"relevance" | "price-asc" | "price-desc" | "name-asc">("relevance");
+
+  useEffect(() => {
+    getAllProducts().then(setProducts).catch(() => {});
+  }, []);
   const [outOfStockLabel, setOutOfStockLabel] = useState("¡Sin stock!");
   const searchTracked = useRef(false);
 

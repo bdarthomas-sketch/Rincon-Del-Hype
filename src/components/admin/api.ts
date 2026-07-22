@@ -432,14 +432,7 @@ export async function uploadImage(token: string, productId: string, file: File, 
   if (altText) form.append("alt_text", altText);
   if (isPrimary) form.append("is_primary", "true");
 
-  const res = await fetch(`${API_PATH}/images/upload`, {
-    method: "POST",
-    headers: authHeaders(token),
-    body: form,
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.error?.message || json?.error || "Upload failed");
-  return json as { data: ImageRecord };
+  return requestFormData<{ data: ImageRecord }>(`${API_PATH}/admin/images/upload`, "POST", token, form);
 }
 
 export async function deleteImage(token: string, id: string) {
@@ -460,7 +453,7 @@ export async function updateImageComposition(token: string, productId: string, i
 export async function getStats(token: string, range?: string) {
   const params = range ? `?range=${range}` : "";
   return request<{ data: DashboardStats }>(
-    `${API_PATH}/admin/stats${params}`,
+    `${API_PATH}/admin/stats/dashboard${params}`,
     { headers: authHeaders(token) }
   );
 }
@@ -624,6 +617,31 @@ export async function listVideoDrops(token: string) {
   );
 }
 
+async function requestFormData<T>(url: string, method: string, token: string, form: FormData): Promise<T> {
+  const doFetch = (t: string) =>
+    fetch(url, { method, headers: authHeaders(t), body: form });
+
+  let res = await doFetch(token);
+  const json = await res.json();
+  if (!res.ok) {
+    if (res.status === 401) {
+      const refreshed = await silentRefresh();
+      if (refreshed) {
+        res = await doFetch(refreshed.access_token);
+        const retryJson = await res.json();
+        if (!res.ok) {
+          window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
+          throw new Error(retryJson?.error?.message || retryJson?.error || `HTTP ${res.status}`);
+        }
+        return retryJson;
+      }
+      window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
+    }
+    throw new Error(json?.error?.message || json?.error || `HTTP ${res.status}`);
+  }
+  return json;
+}
+
 export async function createVideoDrop(token: string, data: VideoDropFormData) {
   const form = new FormData();
   form.append("title", data.title);
@@ -635,14 +653,7 @@ export async function createVideoDrop(token: string, data: VideoDropFormData) {
   if (data.video) form.append("video", data.video);
   if (data.original) form.append("original", data.original);
 
-  const res = await fetch(`${API_PATH}/admin/video-drops`, {
-    method: "POST",
-    headers: authHeaders(token),
-    body: form,
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.error?.message || json?.error || "Create failed");
-  return json as { data: VideoDrop };
+  return requestFormData<{ data: VideoDrop }>(`${API_PATH}/admin/video-drops`, "POST", token, form);
 }
 
 export async function updateVideoDrop(token: string, id: string, data: Partial<VideoDropFormData>) {
@@ -658,14 +669,7 @@ export async function updateVideoDropMedia(token: string, id: string, files: { t
   if (files.video) form.append("video", files.video);
   if (files.original) form.append("original", files.original);
 
-  const res = await fetch(`${API_PATH}/admin/video-drops/${id}/media`, {
-    method: "PUT",
-    headers: authHeaders(token),
-    body: form,
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.error?.message || json?.error || "Media update failed");
-  return json as { data: VideoDrop };
+  return requestFormData<{ data: VideoDrop }>(`${API_PATH}/admin/video-drops/${id}/media`, "PUT", token, form);
 }
 
 export async function clearVideoDropMedia(token: string, id: string) {

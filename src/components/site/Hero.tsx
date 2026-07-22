@@ -1,8 +1,6 @@
 
 import { Truck } from "lucide-react";
-import { scrollToHash, isHomePage, cn, formatPrice, getResponsiveSrcSet, getResponsiveSizes } from "@/lib/utils";
-import { getProductImageUrl } from "@/data/product-images";
-import { getImageCompositionStyle } from "@/lib/image-composition";
+import { scrollToHash, isHomePage } from "@/lib/utils";
 import type { Product } from "@/data/types";
 
 interface HeroProps {
@@ -67,43 +65,7 @@ export function Hero({ products }: HeroProps) {
           </a>
         </div>
 
-        {products && products.length > 0 && (
-          <div className="delay-4 mt-16 md:mt-24">
-            <p className="font-1 uppercase tracking-[0.3em] text-[10px] text-hype mb-6">Destacados</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {products.slice(0, 4).map((p) => {
-                const hStyle = getImageCompositionStyle({
-                  scale: p.image_scale ?? 1.0,
-                  offsetX: p.image_offset_x ?? 0,
-                  offsetY: p.image_offset_y ?? 0,
-                  mode: (p.image_mode as 'fit' | 'cover') ?? 'fit',
-                  image_padding: p.image_padding ?? 0,
-                });
-                return (
-                  <a key={p.id} href={"/producto/" + p.slug} className="group">
-                    <div className="relative aspect-square overflow-hidden rounded-lg bg-black/20">
-                      <div className="absolute inset-[25%] rounded-full bg-hype/0 blur-2xl group-hover:bg-hype/30 transition-all duration-700" />
-                      <img
-                        src={getProductImageUrl(p.image)}
-                        alt={p.name}
-                        width={512}
-                        height={512}
-                        loading="lazy"
-                        srcSet={getResponsiveSrcSet(getProductImageUrl(p.image))}
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        className="relative z-10 size-full object-contain transition-transform duration-700 group-hover:scale-105"
-                        style={hStyle as React.CSSProperties}
-                        onError={(e) => { (e.target as HTMLImageElement).src = getProductImageUrl(""); }}
-                      />
-                    </div>
-                    <p className="mt-2 font-1 font-bold text-sm text-white truncate">{p.name}</p>
-                    <p className="font-1 text-hype text-xs">{formatPrice(p.price)}</p>
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
       </div>
     </section>
   );

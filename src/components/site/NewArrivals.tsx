@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { cn, formatPrice, getResponsiveSrcSet, getResponsiveSizes } from "@/lib/utils";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { getProductImageUrl } from "@/data/product-images";
 import { getImageCompositionStyle } from "@/lib/image-composition";
+import { getAllProducts } from "@/data/products";
 import type { Product } from "@/data/types";
 
 interface NewArrivalsProps {
@@ -10,8 +12,13 @@ interface NewArrivalsProps {
 
 export default NewArrivals;
 
-export function NewArrivals({ products }: NewArrivalsProps) {
+export function NewArrivals({ products: initialProducts }: NewArrivalsProps) {
   const { ref, visible } = useScrollReveal();
+  const [products, setProducts] = useState(initialProducts);
+
+  useEffect(() => {
+    getAllProducts().then((all) => setProducts(all.filter((p) => p.isNew))).catch(() => {});
+  }, []);
 
   return (
     <section
