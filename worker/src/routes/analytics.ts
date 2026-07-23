@@ -21,17 +21,17 @@ export async function getStockAlerts(env: Env) {
 
   const grouped: Record<string, { product_id: string; name: string; slug: string; sizes: string[] }> = {};
 
-  for (const row of data || []) {
+  for (const row of (data || []) as { product_id: string; stock: number; product: { name: string; slug: string } | null; size: { label: string } | null }[]) {
     const pid = row.product_id;
     if (!grouped[pid]) {
       grouped[pid] = {
         product_id: pid,
-        name: (row.product as any)?.name || "Unknown",
-        slug: (row.product as any)?.slug || "",
+        name: row.product?.name || "Unknown",
+        slug: row.product?.slug || "",
         sizes: [],
       };
     }
-    grouped[pid].sizes.push((row.size as any)?.label || "Unknown");
+    grouped[pid].sizes.push(row.size?.label || "Unknown");
   }
 
   return { data: Object.values(grouped) };
@@ -47,13 +47,13 @@ export async function getByCategory(env: Env) {
 
   if (error) throw error;
 
-  const categoryIds = data.map((c: any) => c.id);
+  const categoryIds = data.map((c) => c.id);
 
   const { data: products } = await supabase
     .from("products")
     .select("category_id, id")
     .in("category_id", categoryIds)
-    .is("deleted_at", null);
+    .is("deleted_at", null) as unknown as { data: { category_id: string; id: string }[] | null; error: unknown };
 
   const countMap: Record<string, number> = {};
   for (const p of products || []) {

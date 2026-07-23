@@ -12,7 +12,7 @@ export async function getPerformance(env: Env) {
     .not("product_id", "is", null);
 
   const viewCounts: Record<string, number> = {};
-  for (const e of events || []) {
+  for (const e of (events || []) as { product_id: string | null }[]) {
     if (e.product_id) {
       viewCounts[e.product_id] = (viewCounts[e.product_id] || 0) + 1;
     }
@@ -54,7 +54,7 @@ export async function getPerformance(env: Env) {
 
   // WhatsApp click counts per product
   const waCounts: Record<string, number> = {};
-  for (const e of (waEvents.data || []) as any[]) {
+  for (const e of (waEvents.data || []) as { product_id: string }[]) {
     if (e.product_id) {
       waCounts[e.product_id] = (waCounts[e.product_id] || 0) + 1;
     }
@@ -62,24 +62,22 @@ export async function getPerformance(env: Env) {
 
   // Stock totals per product
   const stockTotals: Record<string, number> = {};
-  for (const s of (sizeData.data || []) as any[]) {
+  for (const s of (sizeData.data || []) as { product_id: string; stock: number }[]) {
     stockTotals[s.product_id] = (stockTotals[s.product_id] || 0) + Number(s.stock);
   }
 
   // Products with images
-  const productsWithImages = new Set((imageData.data || []).map((r: any) => r.product_id));
+  const productsWithImages = new Set((imageData.data || []).map((r: { product_id: string }) => r.product_id));
 
   const descMap: Record<string, string | null> = {};
-  for (const p of (products.data || []) as any[]) {
+  for (const p of (products.data || []) as { id: string; description: string | null; name: string; slug: string; price: number; old_price: number | null; images: { is_primary: boolean; url: string }[]; category: { name: string } | null }[]) {
     descMap[p.id] = p.description;
   }
 
   const productMap: Record<string, any> = {};
   for (const raw of products.data || []) {
-    const p = raw as any;
-    const images: any[] = p.images || [];
-    const primary = images.find((i: any) => i.is_primary)?.url || images[0]?.url || null;
-    const cat: any = p.category;
+    const p = raw as { id: string; name: string; slug: string; price: number; old_price: number | null; images: { is_primary: boolean; url: string }[]; category: { name: string } | null };
+    const primary = p.images?.find((i) => i.is_primary)?.url || p.images?.[0]?.url || null;
     productMap[p.id] = {
       product_id: p.id,
       name: p.name,
@@ -87,7 +85,7 @@ export async function getPerformance(env: Env) {
       price: Number(p.price),
       old_price: p.old_price ? Number(p.old_price) : null,
       primary_image: primary,
-      category_name: cat?.name || "",
+      category_name: p.category?.name || "",
     };
   }
 

@@ -23,17 +23,17 @@ export async function logActivity(
       .from("admins")
       .select("user_id")
       .eq("id", adminId)
-      .single();
+      .single() as unknown as { data: { user_id: string } | null; error: unknown };
 
-    if ((admin as any)?.user_id) {
-      const userResp = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${(admin as any).user_id}`, {
+    if (admin?.user_id) {
+      const userResp = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${admin.user_id}`, {
         headers: {
           Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
           apikey: env.SUPABASE_SERVICE_ROLE_KEY,
         },
       });
       if (userResp.ok) {
-        const user: any = await userResp.json();
+        const user = (await userResp.json()) as { email: string };
         adminEmail = user.email;
       }
     }
@@ -47,5 +47,5 @@ export async function logActivity(
     entity_id: entityId,
     entity_name: entityName || null,
     details: details || null,
-  });
+  } as Record<string, unknown>);
 }

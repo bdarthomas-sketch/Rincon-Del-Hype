@@ -363,7 +363,7 @@ export async function updateProduct(
   if (!updated) throw notFound("Product");
 
   if (adminInfo) {
-    const activityLogs: { action: string; details: Record<string, unknown> }[] = [];
+    const activityLogs: { action: "activated" | "deactivated" | "featured" | "unfeatured" | "price_changed"; details: Record<string, unknown> }[] = [];
     const pd = productData as Record<string, unknown>;
 
     if (pd.is_active !== undefined && pd.is_active !== current.is_active) {
@@ -391,7 +391,7 @@ export async function updateProduct(
       for (const log of activityLogs) {
         await logActivity(env, {
           adminId: adminInfo.id,
-          action: log.action as any,
+          action: log.action,
           entity: "product",
           entityId: id,
           entityName: updated.name,

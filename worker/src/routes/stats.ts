@@ -7,7 +7,7 @@ const MONTHS_ES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function dayLabel(d: Date): string {
-  return DAY_LABELS[d.getDay() === 0 ? 6 : d.getDay() - 1];
+  return DAY_LABELS[d.getDay() === 0 ? 6 : d.getDay() - 1]!;
 }
 
 function formatDateShort(d: Date): string {
@@ -135,52 +135,51 @@ export async function getDashboardStats(env: Env, range: "week" | "month" | "all
   // Compute out_of_stock: products where ALL sizes have stock = 0
   const stockByProduct: Record<string, number> = {};
   for (const row of allStock.data || []) {
-    const sr = row as any;
+    const sr = row as { product_id: string; stock: number };
     stockByProduct[sr.product_id] = (stockByProduct[sr.product_id] || 0) + Number(sr.stock);
   }
 
   let outOfStock = 0;
   let incomplete = 0;
   for (const row of allProducts.data || []) {
-    const p = row as any;
+    const p = row as { id: string; is_active: boolean; created_at: string; images: { id: string }[] | null };
     if (!p.is_active) continue;
-    if (!stockByProduct[p.id] || stockByProduct[p.id] <= 0) outOfStock++;
+    if (!stockByProduct[p.id] || (stockByProduct[p.id] ?? 0) <= 0) outOfStock++;
     if (!p.images?.length) incomplete++;
   }
 
   const prevOutOfStock = (allProducts.data || []).filter(p => {
-    const prod = p as any;
+    const prod = p as { id: string; is_active: boolean; created_at: string; images: { id: string }[] | null };
     if (!prod.is_active || new Date(prod.created_at) >= new Date(sinceDate)) return false;
-    return !stockByProduct[prod.id] || stockByProduct[prod.id] <= 0;
+    return !stockByProduct[prod.id] || (stockByProduct[prod.id] ?? 0) <= 0;
   }).length;
 
   const prevIncomplete = (allProducts.data || []).filter(p => {
-    const prod = p as any;
+    const prod = p as { id: string; is_active: boolean; created_at: string; images: { id: string }[] | null };
     if (!prod.is_active || new Date(prod.created_at) >= new Date(sinceDate)) return false;
     return !prod.images?.length;
   }).length;
 
-  const activeUsersSet = new Set((activeSessions.data || []).map((r: any) => r.session_id).filter(Boolean));
+  const activeUsersSet = new Set((activeSessions.data || []).map((r: { session_id: string }) => r.session_id).filter(Boolean));
 
   const actionCounts: Record<string, number> = {};
-  for (const row of changeHistory.data || []) {
-    const action = (row as any).action;
-    actionCounts[action] = (actionCounts[action] || 0) + 1;
+  for (const row of (changeHistory.data || []) as { action: string }[]) {
+    actionCounts[row.action] = (actionCounts[row.action] || 0) + 1;
   }
 
-  const catIds = (categoriesWithProducts.data || []).map((c: any) => c.id);
+  const catIds = (categoriesWithProducts.data || []).map((c) => c.id);
   const { data: productCats } = await supabase
     .from("products")
     .select("category_id")
     .in("category_id", catIds)
-    .is("deleted_at", null);
+    .is("deleted_at", null) as unknown as { data: { category_id: string }[] | null; error: unknown };
 
   const catCountMap: Record<string, number> = {};
   for (const p of productCats || []) {
     catCountMap[p.category_id] = (catCountMap[p.category_id] || 0) + 1;
   }
 
-  const productsByCategory = (categoriesWithProducts.data || []).map((c: any) => ({
+  const productsByCategory = (categoriesWithProducts.data || []).map((c) => ({
     name: c.name,
     slug: c.slug,
     count: catCountMap[c.id] || 0,
@@ -196,7 +195,7 @@ export async function getDashboardStats(env: Env, range: "week" | "month" | "all
     bucketSearches[b] = 0;
   }
   const allUniqueSessions = new Set<string>();
-  for (const evt of (dailyEvents.data || []) as any[]) {
+  for (const evt of (dailyEvents.data || []) as { created_at: string; event_type: string; session_id: string | null }[]) {
     let key: string;
     if (range === "all") {
       key = evt.created_at.slice(0, 7);
@@ -209,15 +208,15 @@ export async function getDashboardStats(env: Env, range: "week" | "month" | "all
           bucketVisitSessions[key].add(evt.session_id);
           allUniqueSessions.add(evt.session_id);
         }
-      } else if (evt.event_type === "whatsapp_click") bucketWhatsapp[key]++;
-      else if (evt.event_type === "search") bucketSearches[key]++;
+      } else if (evt.event_type === "whatsapp_click") bucketWhatsapp[key] = (bucketWhatsapp[key] ?? 0) + 1;
+      else if (evt.event_type === "search") bucketSearches[key] = (bucketSearches[key] ?? 0) + 1;
     }
   }
-  const visits = buckets.map((b) => bucketVisitSessions[b].size);
-  const whatsapp = buckets.map((b) => bucketWhatsapp[b]);
-  const searchesDaily = buckets.map((b) => bucketSearches[b]);
+  const visits = buckets.map((b) => bucketVisitSessions[b]?.size ?? 0);
+  const whatsapp = buckets.map((b) => bucketWhatsapp[b] ?? 0);
+  const searchesDaily = buckets.map((b) => bucketSearches[b] ?? 0);
 
-  const prevUniqueVisits = new Set((prevSessions.data || []).map((r: any) => r.session_id).filter(Boolean)).size;
+  const prevUniqueVisits = new Set((prevSessions.data || []).map((r: { session_id: string }) => r.session_id).filter(Boolean)).size;
 
   const stats: DashboardStats = {
     product_stats: {

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import type { Env, AdminUser } from "../types";
+import type { Env, AdminUser, StoreSettingRow } from "../types";
 import { getSupabase } from "../lib/supabase";
 import { notFound, validationError } from "../lib/errors";
 import { UpdateSettingSchema, CreateAdminSchema } from "../lib/validate";
@@ -19,7 +19,7 @@ export async function getPublicSettings(env: Env) {
   if (error) throw error;
 
   const settings: Record<string, any> = {};
-  for (const row of (data || []) as any[]) {
+  for (const row of (data || []) as StoreSettingRow[]) {
     settings[row.key] = row.value;
   }
   if (!settings.out_of_stock_label) {
@@ -40,7 +40,7 @@ export async function getSettings(env: Env) {
   if (error) throw error;
 
   const settings: Record<string, any> = {};
-  for (const row of (data || []) as any[]) {
+  for (const row of (data || []) as StoreSettingRow[]) {
     settings[row.key] = row.value;
   }
 
@@ -59,11 +59,11 @@ export async function updateSetting(env: Env, key: string, body: unknown, adminI
         value: parsed.value,
         updated_at: new Date().toISOString(),
         updated_by: adminInfo?.id || null,
-      },
+      } as Record<string, unknown>,
       { onConflict: "key" }
     )
     .select()
-    .single();
+    .single() as unknown as { data: StoreSettingRow | null; error: unknown };
 
   if (error) throw error;
 
@@ -72,7 +72,7 @@ export async function updateSetting(env: Env, key: string, body: unknown, adminI
       adminId: adminInfo.id,
       action: "updated",
       entity: "setting",
-      entityId: (data as any).id,
+      entityId: data!.id,
       entityName: key,
     });
   }
@@ -90,7 +90,7 @@ export async function listAdmins(env: Env) {
   if (error) throw error;
 
   const admins = await Promise.all(
-    ((data || []) as any[]).map(async (admin: any) => {
+    ((data || []) as { id: string; user_id: string; role: string; created_at: string }[]).map(async (admin) => {
       try {
         const userResp = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${admin.user_id}`, {
           headers: {
@@ -99,7 +99,7 @@ export async function listAdmins(env: Env) {
           },
         });
         if (userResp.ok) {
-          const user: any = await userResp.json();
+          const user = (await userResp.json()) as { email: string };
           return { ...admin, email: user.email };
         }
       } catch {
@@ -145,9 +145,9 @@ export async function createAdmin(env: Env, body: unknown, adminInfo?: { id: str
     .insert({
       user_id: invitedUser.id,
       role: parsed.role,
-    })
+    } as Record<string, unknown>)
     .select()
-    .single();
+    .single() as unknown as { data: { id: string; user_id: string; role: string } | null; error: unknown };
 
   if (error) {
     throw validationError("Failed to create admin record");
@@ -158,13 +158,13 @@ export async function createAdmin(env: Env, body: unknown, adminInfo?: { id: str
       adminId: adminInfo.id,
       action: "created",
       entity: "admin",
-      entityId: (admin as any).id,
+      entityId: admin!.id,
       entityName: parsed.email,
       details: { role: parsed.role },
     });
   }
 
-  return { data: { ...(admin as any), email: parsed.email } };
+  return { data: { ...admin!, email: parsed.email } } as { data: { id: string; user_id: string; role: string; email: string } };
 }
 
 export async function deleteAdmin(env: Env, id: string, adminInfo?: { id: string; role: string } | null) {
@@ -174,14 +174,14 @@ export async function deleteAdmin(env: Env, id: string, adminInfo?: { id: string
     .from("admins")
     .select("id, user_id")
     .eq("id", id)
-    .single();
+    .single() as unknown as { data: { id: string; user_id: string } | null; error: unknown };
 
   if (findError || !admin) throw notFound("Admin");
 
   await supabase.from("admins").delete().eq("id", id);
 
   await fetch(
-    `${env.SUPABASE_URL}/auth/v1/admin/users/${(admin as any).user_id}`,
+    `${env.SUPABASE_URL}/auth/v1/admin/users/${admin.user_id}`,
     {
       method: "DELETE",
       headers: {
@@ -218,7 +218,7 @@ settingsRouter.get('/', async (c) => {
 settingsRouter.post('/', async (c) => {
   const body = await c.req.json();
   const adminUser = c.get('adminUser');
-  const key = (body as any).key as string;
+  const key = (body as { key: string }).key;
   const result = await updateSetting(c.env, key, body, adminUser ? { id: adminUser.id, role: adminUser.role } : null);
   await purgeCache(c, ['/api/settings']);
   return c.json(result, 201);

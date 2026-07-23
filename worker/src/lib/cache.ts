@@ -45,7 +45,15 @@ export function getCachedResponse(key: string): Response | null {
   return new Response(entry.body, { status: entry.status, headers });
 }
 
+export function cleanExpired(): void {
+  const now = Date.now();
+  for (const [key, entry] of store) {
+    if (now > entry.expiry) store.delete(key);
+  }
+}
+
 export function setCachedJson(key: string, pathname: string, data: unknown, corsHeaders: Record<string, string>): void {
+  cleanExpired(); // ponytail: O(n) scan per write, fine while store is small
   const body = JSON.stringify(data);
   const ttl = getTTL(pathname);
   store.set(key, {

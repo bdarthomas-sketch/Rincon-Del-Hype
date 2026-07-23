@@ -89,7 +89,7 @@ export async function uploadImage(env: Env, request: Request, adminInfo?: { id: 
           format: "image/png",
           width: 1200, height: 1200, fit: "pad",
           trim: { tolerance: 0 }, background: "rgba(0,0,0,0)",
-        } as any);
+        } as ImageTransform & ImageOutputOptions);
       finalBlob = await (await trimResult.response()).blob();
     } catch (trimError) {
       console.error("Images trim/resize failed, using processed:", trimError);
