@@ -2,20 +2,11 @@ import type { Product, Category } from "./types";
 import { fetchAllProducts, fetchProductBySlug, fetchCategories } from "../lib/api";
 
 async function loadProducts(): Promise<Product[]> {
-  try {
-    return await fetchAllProducts();
-  } catch (e) {
-    console.error("Error al cargar productos:", e);
-    return [];
-  }
+  return fetchAllProducts();
 }
 
 async function loadCategories(): Promise<Category[]> {
-  try {
-    return await fetchCategories() as Category[];
-  } catch {
-    return [];
-  }
+  return fetchCategories();
 }
 
 export const PRICE_RANGES = [
@@ -36,11 +27,7 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
-  try {
-    return (await fetchProductBySlug(slug)) ?? undefined;
-  } catch {
-    return undefined;
-  }
+  return (await fetchProductBySlug(slug)) ?? undefined;
 }
 
 export async function getCategories(): Promise<Category[]> {

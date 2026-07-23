@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import { loginAdmin, checkSession, silentRefresh, UNAUTHORIZED_EVENT, TOKEN_KEY, REFRESH_TOKEN_KEY, EXPIRES_IN_KEY, type AdminUser } from "./api";
+import { loginAdmin, logoutAdmin, checkSession, silentRefresh, UNAUTHORIZED_EVENT, type AdminUser } from "./api";
 
 interface AuthState {
   token: string | null;
@@ -39,60 +39,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    if (!storedToken) {
-      setState((s) => ({ ...s, loading: false }));
-      return;
-    }
-
-    checkSession(storedToken)
+    checkSession()
       .then((res) => {
         if (res.data.authenticated) {
-          setState({ token: storedToken, user: res.data.user ?? null, loading: false });
-          const expiresIn = localStorage.getItem(EXPIRES_IN_KEY);
-          if (expiresIn) scheduleRefreshRef.current?.(parseInt(expiresIn));
-        } else {
-          handleInitRefresh();
-        }
-      })
-      .catch(() => handleInitRefresh());
-
-    function handleInitRefresh() {
-      silentRefresh().then((refreshed) => {
-        if (refreshed) {
-          setState({ token: refreshed.access_token, user: null, loading: false });
-          scheduleRefreshRef.current?.(refreshed.expires_in);
-          checkSession(refreshed.access_token).then((res) => {
-            if (res.data.authenticated && res.data.user) {
-              setState((s) => ({ ...s, user: res.data.user }));
-            }
+          setState({ token: res.data.access_token ?? null, user: res.data.user ?? null, loading: false, error: null });
+          silentRefresh().then((r) => {
+            if (r) scheduleRefreshRef.current?.(r.expires_in);
           }).catch(() => {});
         } else {
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(REFRESH_TOKEN_KEY);
-          localStorage.removeItem(EXPIRES_IN_KEY);
-          setState({ token: null, user: null, loading: false, error: "Sesión expirada. Ingresá de nuevo." });
+          setState((s) => ({ ...s, loading: false }));
         }
-      });
-    }
+      })
+      .catch(() => setState((s) => ({ ...s, loading: false })));
 
     async function onUnauthorized() {
       const refreshed = await silentRefresh();
       if (refreshed) {
         setState((s) => ({ ...s, token: refreshed.access_token, error: null }));
         scheduleRefreshRef.current?.(refreshed.expires_in);
-        checkSession(refreshed.access_token).then((res) => {
-          if (res.data.authenticated && res.data.user) {
-            setState((s) => ({ ...s, user: res.data.user }));
-          }
-        }).catch(() => {});
-        return;
+      } else {
+        if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+        setState({ token: null, user: null, loading: false, error: "Sesión expirada. Ingresá de nuevo." });
       }
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem(EXPIRES_IN_KEY);
-      setState({ token: null, user: null, loading: false, error: "Sesión expirada. Ingresá de nuevo." });
     }
     window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
 
@@ -104,18 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await loginAdmin(email, password);
-    localStorage.setItem(TOKEN_KEY, res.data.access_token);
-    localStorage.setItem(REFRESH_TOKEN_KEY, res.data.refresh_token);
-    localStorage.setItem(EXPIRES_IN_KEY, String(res.data.expires_in));
     setState({ token: res.data.access_token, user: res.data.user, loading: false, error: null });
     scheduleRefreshRef.current?.(res.data.expires_in);
   }, []);
 
   const logout = useCallback(() => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem(EXPIRES_IN_KEY);
+    logoutAdmin().catch(() => {});
     setState({ token: null, user: null, loading: false, error: null });
   }, []);
 

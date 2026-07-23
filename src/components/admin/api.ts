@@ -1,41 +1,31 @@
 ﻿const API_BASE = (typeof import.meta !== 'undefined' ? import.meta.env?.PUBLIC_API_BASE : undefined) || "https://rincondelhype-api.bdarthomas.workers.dev";
 const API_PATH = `${API_BASE}/api`;
 
-const TOKEN_KEY = "rdh_admin_token";
-const REFRESH_TOKEN_KEY = "rdh_admin_refresh";
-const EXPIRES_IN_KEY = "rdh_admin_expires_in";
-
-function authHeaders(token: string): Record<string, string> {
-  return { Authorization: `Bearer ${token}` };
-}
-
 const UNAUTHORIZED_EVENT = "rdh:unauthorized";
+
+function authHeaders(_token: string): Record<string, string> {
+  return {};
+}
 
 function isAuthError(res: Response, _json: any): boolean {
   return res.status === 401;
 }
 
-async function silentRefresh(): Promise<{ access_token: string; refresh_token: string; expires_in: number } | null> {
-  const storedRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-  if (!storedRefresh) return null;
+async function silentRefresh(): Promise<{ access_token: string; expires_in: number } | null> {
   const res = await fetch(`${API_PATH}/admin/refresh`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: storedRefresh }),
   });
   const json = await res.json();
   if (!res.ok) return null;
-  const data = json.data as { access_token: string; refresh_token: string; expires_in: number };
-  localStorage.setItem(TOKEN_KEY, data.access_token);
-  localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
-  localStorage.setItem(EXPIRES_IN_KEY, String(data.expires_in));
-  return data;
+  return json.data as { access_token: string; expires_in: number };
 }
 
 async function request<T>(url: string, opts?: RequestInit): Promise<T> {
   const doFetch = (extraHeaders?: Record<string, string>) => {
     const headers = { "Content-Type": "application/json", ...opts?.headers, ...extraHeaders };
-    return fetch(url, { ...opts, headers });
+    return fetch(url, { ...opts, headers, credentials: "include" });
   };
 
   let res = await doFetch();
@@ -44,7 +34,7 @@ async function request<T>(url: string, opts?: RequestInit): Promise<T> {
     if (isAuthError(res, json)) {
       const refreshed = await silentRefresh();
       if (refreshed) {
-        res = await doFetch({ Authorization: `Bearer ${refreshed.access_token}` });
+        res = await doFetch();
         const retryJson = await res.json();
         if (!res.ok) {
           window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
@@ -59,7 +49,7 @@ async function request<T>(url: string, opts?: RequestInit): Promise<T> {
   return json;
 }
 
-export { UNAUTHORIZED_EVENT, TOKEN_KEY, REFRESH_TOKEN_KEY, EXPIRES_IN_KEY, silentRefresh };
+export { UNAUTHORIZED_EVENT, silentRefresh };
 
 export interface AdminUser {
   id: string;
@@ -258,16 +248,22 @@ export interface StockAlert {
 
 // Auth
 export async function loginAdmin(email: string, password: string) {
-  return request<{ data: { access_token: string; refresh_token: string; expires_in: number; user: AdminUser } }>(
+  return request<{ data: { access_token: string; expires_in: number; user: AdminUser } }>(
     `${API_PATH}/admin/login`,
     { method: "POST", body: JSON.stringify({ email, password }) }
   );
 }
 
-export async function checkSession(token: string) {
-  return request<{ data: { authenticated: boolean; user?: AdminUser; role?: string | null } }>(
-    `${API_PATH}/admin/check`,
-    { headers: authHeaders(token) }
+export async function logoutAdmin() {
+  return request<{ data: { message: string } }>(
+    `${API_PATH}/admin/logout`,
+    { method: "POST" }
+  );
+}
+
+export async function checkSession() {
+  return request<{ data: { authenticated: boolean; user?: AdminUser; role?: string | null; access_token?: string } }>(
+    `${API_PATH}/admin/check`
   );
 }
 
@@ -437,7 +433,7 @@ export async function uploadImage(token: string, productId: string, file: File, 
 
 export async function deleteImage(token: string, id: string) {
   return request<{ data: { message: string } }>(
-    `${API_PATH}/images/${id}`,
+    `${API_PATH}/admin/images/${id}`,
     { method: "DELETE", headers: authHeaders(token) }
   );
 }
@@ -618,16 +614,16 @@ export async function listVideoDrops(token: string) {
 }
 
 async function requestFormData<T>(url: string, method: string, token: string, form: FormData): Promise<T> {
-  const doFetch = (t: string) =>
-    fetch(url, { method, headers: authHeaders(t), body: form });
+  const doFetch = () =>
+    fetch(url, { method, headers: authHeaders(token), body: form, credentials: "include" });
 
-  let res = await doFetch(token);
+  let res = await doFetch();
   const json = await res.json();
   if (!res.ok) {
     if (res.status === 401) {
       const refreshed = await silentRefresh();
       if (refreshed) {
-        res = await doFetch(refreshed.access_token);
+        res = await doFetch();
         const retryJson = await res.json();
         if (!res.ok) {
           window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));

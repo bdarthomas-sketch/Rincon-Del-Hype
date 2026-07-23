@@ -27,6 +27,7 @@ export const cors = createMiddleware<{ Bindings: Env }>(async (c, next) => {
     c.res.headers.set('Access-Control-Allow-Origin', corsOrigin);
     c.res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     c.res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    c.res.headers.set('Access-Control-Allow-Credentials', 'true');
     c.res.headers.set('Access-Control-Max-Age', '86400');
     c.res.headers.set('Vary', 'Origin');
   };

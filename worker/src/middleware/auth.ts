@@ -1,4 +1,5 @@
 import { createMiddleware } from 'hono/factory';
+import { getCookie } from 'hono/cookie';
 import type { Env, AdminUser } from '../types';
 import { unauthorized } from '../lib/errors';
 
@@ -6,12 +7,13 @@ export const verifyAdmin = createMiddleware<{
   Bindings: Env;
   Variables: { adminUser: AdminUser };
 }>(async (c, next) => {
-  const authHeader = c.req.header('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw unauthorized('Missing or invalid Authorization header');
-  }
+  const token = getCookie(c, 'access_token')
+    || (() => {
+      const header = c.req.header('Authorization');
+      return header?.startsWith('Bearer ') ? header.slice(7) : null;
+    })();
 
-  const token = authHeader.slice(7);
+  if (!token) throw unauthorized('Missing token');
 
   const userResp = await fetch(`${c.env.SUPABASE_URL}/auth/v1/user`, {
     headers: {

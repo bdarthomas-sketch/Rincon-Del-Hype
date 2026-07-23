@@ -4,7 +4,7 @@ import { cors } from './middleware/cors';
 import { publicCache } from './middleware/cache';
 import { errorHandler } from './middleware/error-handler';
 import { verifyAdmin } from './middleware/auth';
-import { loginHandler, refreshHandler, checkHandler } from './routes/auth';
+import { loginHandler, refreshHandler, checkHandler, logoutHandler } from './routes/auth';
 import productsRoutes from './routes/products';
 import categoriesRoutes from './routes/categories';
 import sizesRoutes from './routes/sizes';
@@ -48,6 +48,7 @@ app.route('/api/analytics/track', analyticsPublicRoutes);
 app.post('/api/admin/login', loginHandler);
 app.post('/api/admin/refresh', refreshHandler);
 app.get('/api/admin/check', checkHandler);
+app.post('/api/admin/logout', logoutHandler);
 
 // Admin routes (autenticadas con verifyAdmin)
 const admin = new Hono<{ Bindings: Env; Variables: { adminUser: AdminUser } }>();

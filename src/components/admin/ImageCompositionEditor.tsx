@@ -49,9 +49,7 @@ export function ImageCompositionEditor({
       saveTimeoutRef.current = setTimeout(async () => {
         setSaveStatus("saving");
         try {
-          const token = localStorage.getItem("rdh_admin_token");
-          if (!token) throw new Error("No token");
-          await updateImageComposition(token, productId, imageId, newComposition);
+          await updateImageComposition("", productId, imageId, newComposition);
           lastSavedRef.current = key;
           setSaveStatus("saved");
           setTimeout(() => setSaveStatus("idle"), 2000);
