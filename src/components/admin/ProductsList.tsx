@@ -45,7 +45,7 @@ export function ProductsList() {
 
   useEffect(() => {
     if (!token) return;
-    listBrands(token).then((res) => setBrandsList(res.data)).catch(() => { });
+    listBrands(token).then((res) => setBrandsList(res.data)).catch((e) => console.error("Error loading brands:", e));
   }, [token]);
 
   async function handleDelete(id: string, name: string) {

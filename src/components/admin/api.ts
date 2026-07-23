@@ -332,7 +332,7 @@ export interface ReorderItem {
 export async function reorderProducts(token: string, items: ReorderItem[]) {
   return request<{ success: boolean }>(
     `${API_PATH}/products/reorder`,
-    { method: "PUT", body: JSON.stringify({ items }), headers: authHeaders(token) }
+    { method: "POST", body: JSON.stringify({ items }), headers: authHeaders(token) }
   );
 }
 

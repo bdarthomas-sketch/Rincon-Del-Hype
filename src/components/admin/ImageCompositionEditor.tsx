@@ -55,7 +55,8 @@ export function ImageCompositionEditor({
           lastSavedRef.current = key;
           setSaveStatus("saved");
           setTimeout(() => setSaveStatus("idle"), 2000);
-        } catch {
+        } catch (e: unknown) {
+          console.error("Error saving composition:", e);
           setSaveStatus("error");
         }
       }, 500);

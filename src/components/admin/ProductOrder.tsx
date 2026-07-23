@@ -216,9 +216,13 @@ export function ProductOrder({ open, onClose }: ProductOrderProps) {
     }
 
     setSaveStatus("saving");
+    setError("");
     reorderProducts(token!, reorderItems)
       .then(() => setSaveStatus("saved"))
-      .catch(() => setSaveStatus("error"));
+      .catch((e: Error) => {
+        setError(e.message);
+        setSaveStatus("error");
+      });
   }
 
   const cols = view === "mobile" ? "grid-cols-2" : "grid-cols-3";
@@ -294,7 +298,7 @@ export function ProductOrder({ open, onClose }: ProductOrderProps) {
             {saveStatus === "error" && (
               <span className="flex items-center gap-1.5 font-3 text-[10px] text-destructive">
                 <AlertCircle size={12} />
-                Error al guardar
+                {error || "Error al guardar"}
               </span>
             )}
           </div>

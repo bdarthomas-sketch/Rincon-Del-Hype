@@ -1,5 +1,8 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import SiteHeader from "@/components/site/SiteHeader";
+import SiteFooter from "@/components/site/SiteFooter";
+import CartDrawer from "@/components/cart/CartDrawer";
 import ProductoPage from "@/components/producto/ProductoPage";
 import { getAllProducts, getProductBySlug } from "@/data/products";
 
@@ -27,6 +30,7 @@ const productImage = product?.image || "";
 ---
 
 <Layout title={title} description={description}>
+  <SiteHeader client:load />
   {
     product && (
       <script type="application/ld+json" set:html={JSON.stringify({
@@ -49,4 +53,6 @@ const productImage = product?.image || "";
       ? <ProductoPage client:load initialProduct={product} />
       : <div class="container-x pt-40 text-center"><h1 class="font-1 font-bold text-2xl text-white mb-4">Producto no encontrado</h1><a href="/catalogo" class="font-1 uppercase text-xs tracking-widest text-hype">Volver al catálogo</a></div>
   }
+  <SiteFooter client:load />
+  <CartDrawer client:load />
 </Layout>
