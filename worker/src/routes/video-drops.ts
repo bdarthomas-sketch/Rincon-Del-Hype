@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env, AdminUser, VideoDropRow } from "../types";
 import { getSupabase } from "../lib/supabase";
 import { notFound, validationError, unauthorized } from "../lib/errors";
+import { getAdminInfo } from "../lib/auth";
 import { logActivity } from "../lib/activity";
 import {
   CreateVideoDropSchema,
@@ -536,7 +537,6 @@ const videoDropsRouter = new Hono<{ Bindings: Env; Variables: { adminUser?: Admi
 // Public + Admin: GET / returns public list or admin list based on auth
 videoDropsRouter.get('/', async (c) => {
   const adminUser = c.get('adminUser');
-  console.log('[DIAG] GET / video-drops adminUser:', JSON.stringify(adminUser));
   if (adminUser) {
     return c.json(await listVideoDrops(c.env));
   }
@@ -552,8 +552,7 @@ videoDropsRouter.post('/:id/click', async (c) => {
 
 // Admin: POST / (create with multipart)
 videoDropsRouter.post('/', async (c) => {
-  const adminUser = c.get('adminUser');
-  console.log('[DIAG] POST / video-drops adminUser:', JSON.stringify(adminUser), 'path:', c.req.path);
+  const adminUser = await getAdminInfo(c.env, c.req.raw);
   if (!adminUser) throw unauthorized();
   const result = await createVideoDrop(c.env, c.req.raw, { id: adminUser.id });
   await purgeCache(c, ['/api/video-drops']);
@@ -562,7 +561,7 @@ videoDropsRouter.post('/', async (c) => {
 
 // Admin: PUT /reorder
 videoDropsRouter.put('/reorder', async (c) => {
-  const adminUser = c.get('adminUser');
+  const adminUser = await getAdminInfo(c.env, c.req.raw);
   if (!adminUser) throw unauthorized();
   const body = await c.req.json();
   const result = await reorderVideoDrops(c.env, body, { id: adminUser.id });
@@ -572,7 +571,7 @@ videoDropsRouter.put('/reorder', async (c) => {
 
 // Admin: PUT /:id/media (multipart)
 videoDropsRouter.put('/:id/media', async (c) => {
-  const adminUser = c.get('adminUser');
+  const adminUser = await getAdminInfo(c.env, c.req.raw);
   if (!adminUser) throw unauthorized();
   const id = c.req.param('id');
   const result = await updateVideoDropMedia(c.env, id, c.req.raw, { id: adminUser.id });
@@ -582,7 +581,7 @@ videoDropsRouter.put('/:id/media', async (c) => {
 
 // Admin: PUT /:id/clear-media
 videoDropsRouter.put('/:id/clear-media', async (c) => {
-  const adminUser = c.get('adminUser');
+  const adminUser = await getAdminInfo(c.env, c.req.raw);
   if (!adminUser) throw unauthorized();
   const id = c.req.param('id');
   const result = await clearVideoDropMedia(c.env, id, { id: adminUser.id });
@@ -592,7 +591,7 @@ videoDropsRouter.put('/:id/clear-media', async (c) => {
 
 // Admin: PUT /:id (metadata)
 videoDropsRouter.put('/:id', async (c) => {
-  const adminUser = c.get('adminUser');
+  const adminUser = await getAdminInfo(c.env, c.req.raw);
   if (!adminUser) throw unauthorized();
   const id = c.req.param('id');
   const body = await c.req.json();
@@ -603,7 +602,7 @@ videoDropsRouter.put('/:id', async (c) => {
 
 // Admin: DELETE /:id
 videoDropsRouter.delete('/:id', async (c) => {
-  const adminUser = c.get('adminUser');
+  const adminUser = await getAdminInfo(c.env, c.req.raw);
   if (!adminUser) throw unauthorized();
   const id = c.req.param('id');
   const result = await deleteVideoDrop(c.env, id, { id: adminUser.id });
