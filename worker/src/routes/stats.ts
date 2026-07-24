@@ -160,7 +160,7 @@ export async function getDashboardStats(env: Env, range: "week" | "month" | "all
     return !prod.images?.length;
   }).length;
 
-  const activeUsersSet = new Set((activeSessions.data || []).map((r: { session_id: string }) => r.session_id).filter(Boolean));
+  const activeUsersSet = new Set((activeSessions.data || []).map((r: { session_id: string | null }) => r.session_id).filter(Boolean));
 
   const actionCounts: Record<string, number> = {};
   for (const row of (changeHistory.data || []) as { action: string }[]) {
@@ -202,10 +202,11 @@ export async function getDashboardStats(env: Env, range: "week" | "month" | "all
     } else {
       key = evt.created_at.slice(0, 10);
     }
-    if (bucketVisitSessions[key]) {
+    const sessions = bucketVisitSessions[key];
+    if (sessions) {
       if (evt.event_type === "page_view") {
         if (evt.session_id) {
-          bucketVisitSessions[key].add(evt.session_id);
+          sessions.add(evt.session_id);
           allUniqueSessions.add(evt.session_id);
         }
       } else if (evt.event_type === "whatsapp_click") bucketWhatsapp[key] = (bucketWhatsapp[key] ?? 0) + 1;
@@ -216,7 +217,7 @@ export async function getDashboardStats(env: Env, range: "week" | "month" | "all
   const whatsapp = buckets.map((b) => bucketWhatsapp[b] ?? 0);
   const searchesDaily = buckets.map((b) => bucketSearches[b] ?? 0);
 
-  const prevUniqueVisits = new Set((prevSessions.data || []).map((r: { session_id: string }) => r.session_id).filter(Boolean)).size;
+  const prevUniqueVisits = new Set((prevSessions.data || []).map((r: { session_id: string | null }) => r.session_id).filter(Boolean)).size;
 
   const stats: DashboardStats = {
     product_stats: {

@@ -65,7 +65,7 @@ export async function listProducts(env: Env, url: URL, adminUser?: { userId: str
   if (query.sort === "sort_order") {
     q = q.order("sort_order", { ascending: true });
   } else {
-    const sort = sortMap[query.sort];
+    const sort = sortMap[query.sort]!;
     q = q.order(sort.column, { ascending: sort.direction === "asc" });
   }
 

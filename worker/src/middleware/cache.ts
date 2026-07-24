@@ -51,7 +51,8 @@ export async function purgeCache(c: Context, paths: string[]) {
   const purges = paths.map(path => {
     const url = new URL(path, baseUrl.origin);
     const key = new Request(url.toString(), { method: 'GET' });
-    return cache.delete(key);
+    return cache.delete(key, { ignoreSearch: true } as any);
+
   });
   await Promise.allSettled(purges);
 }

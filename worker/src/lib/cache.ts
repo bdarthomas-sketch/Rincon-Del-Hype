@@ -70,6 +70,7 @@ export function setCachedJson(key: string, pathname: string, data: unknown, cors
 
 export function invalidateRelated(pathname: string): void {
   for (const key of store.keys()) {
-    if (key.includes(pathname)) store.delete(key);
+    const keyUrl = new URL(key);
+    if (keyUrl.pathname.startsWith(pathname)) store.delete(key);
   }
 }

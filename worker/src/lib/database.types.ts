@@ -1,5 +1,13 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
+type FK = {
+  foreignKeyName: string;
+  columns: string[];
+  isOneToOne?: boolean;
+  referencedRelation: string;
+  referencedColumns: string[];
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -33,49 +41,57 @@ export type Database = {
         };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey";
+            columns: ["category_id"];
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_brand_id_fkey";
+            columns: ["brand_id"];
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       categories: {
-        Row: {
-          id: string;
-          name: string;
-          slug: string;
-          description: string | null;
-          sort_order: number;
-        };
+        Row: { id: string; name: string; slug: string; description: string | null; sort_order: number };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];
       };
       sizes: {
-        Row: {
-          id: string;
-          label: string;
-          sort_order: number;
-        };
+        Row: { id: string; label: string; sort_order: number };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];
       };
       brands: {
-        Row: {
-          id: string;
-          name: string;
-          slug: string;
-        };
+        Row: { id: string; name: string; slug: string };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];
       };
       product_sizes: {
-        Row: {
-          product_id: string;
-          size_id: string;
-          stock: number;
-        };
+        Row: { product_id: string; size_id: string; stock: number };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "product_sizes_product_id_fkey";
+            columns: ["product_id"];
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_sizes_size_id_fkey";
+            columns: ["size_id"];
+            referencedRelation: "sizes";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       product_images: {
         Row: {
@@ -94,27 +110,23 @@ export type Database = {
         };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey";
+            columns: ["product_id"];
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       store_settings: {
-        Row: {
-          id: string;
-          key: string;
-          value: Record<string, unknown>;
-          updated_at: string;
-          updated_by: string | null;
-        };
+        Row: { id: string; key: string; value: Record<string, unknown>; updated_at: string; updated_by: string | null };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];
       };
       admins: {
-        Row: {
-          id: string;
-          user_id: string;
-          role: string;
-          created_at: string;
-        };
+        Row: { id: string; user_id: string; role: string; created_at: string };
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
         Relationships: [];
@@ -170,7 +182,12 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: Record<string, { Row: Record<string, unknown> }>;
+    Views: Record<string, {
+      Row: Record<string, unknown>;
+      Insert: Record<string, unknown>;
+      Update: Record<string, unknown>;
+      Relationships: [];
+    }>;
     Functions: Record<string, { Args: Record<string, unknown>; Returns: unknown }>;
   };
 };
